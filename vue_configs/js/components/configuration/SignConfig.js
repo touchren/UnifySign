@@ -17,7 +17,7 @@ const SignConfig = {
           {
             name: '全家签到',
             script: 'Fami.js',
-            enabled: true
+            enabled: false
           },
           {
             name: '京东签到',
@@ -27,7 +27,7 @@ const SignConfig = {
           {
             name: '米游社-原神签到',
             script: 'MiHoYou.js',
-            enabled: true
+            enabled: false
           },
           {
             name: '淘金币签到',
@@ -42,6 +42,11 @@ const SignConfig = {
           {
             name: '微博积分签到',
             script: 'Weibo.js',
+            enabled: true
+          },
+          {
+            name: '浦发公众号',
+            script: 'PuFaWechat.js',
             enabled: true
           }
         ]
