@@ -108,6 +108,11 @@ let default_config = {
       name: '微博积分签到',
       script: 'Weibo.js',
       enabled: true
+    },
+    {
+      name: '浦发公众号',
+      script: 'PuFaWechat.js',
+      enabled: true
     }
   ]
 }
