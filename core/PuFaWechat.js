@@ -72,7 +72,7 @@ function SignRunner() {
       // 点击二级菜单
       click("超6红包·全能积分");
 
-      FloatyInstance.setFloatyText(
+      FloatyInstance.setFloatyInfo(
         widgetUtils.widgetGetOne("rBsZJWHOqAOAMdCIAABWGkErleI501"),
         "打开[超6红包]页面"
       );
@@ -99,7 +99,7 @@ function SignRunner() {
       sleep(5000);
       let openOne = widgetUtils.widgetGetOne("开1个红包.*");
       if (openOne) {
-        FloatyInstance.setFloatyText(openOne, "点击[开1个红包]");
+        FloatyInstance.setFloatyInfo(openOne, "点击[开1个红包]");
         // 点击 开1个红包
         click("开1个红包");
       }
