@@ -1,5 +1,5 @@
 /**
- * 浦发公众号签到
+ * 浦发公众号-每日打卡
  */
 
 let singletonRequire = require("../lib/SingletonRequirer.js")(runtime, this);
@@ -50,13 +50,16 @@ function SignRunner() {
     // !config._debugging && commonFunctions.minimize(_package_name);
 
     home();
-    sleep(3000);
+    sleep(1500);
+    home();
+    sleep(2000);
     FloatyInstance.enableLog();
     // 通过桌面快捷方式直接进入公众号
 
     let mine = widgetUtils.widgetGetOne("信用卡公众号");
     if (mine) {
       FloatyInstance.setFloatyInfo(mine, "打开[浦发公众号]");
+      sleep(2000);
       click("信用卡公众号");
       sleep(2000);
       click("浦发银行信用卡");
@@ -106,13 +109,13 @@ function SignRunner() {
       }
 
       //FloatyInstance.setFloatyText("关闭[打成红包成功的页面]");
-      
+
       // 关闭弹框
       // 494,1525,585,1614 , 关闭
       let success = textMatches(/.*恭喜您.*/).findOne(5000);
       if (success) {
         this.setExecuted();
-        success.parent().parent().child(1).click();        
+        success.parent().parent().child(1).click();
         //FloatyInstance.setFloatyText("进入[每日打卡]页面查看");
         sleep(2000);
       }

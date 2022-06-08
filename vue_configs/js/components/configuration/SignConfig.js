@@ -45,7 +45,7 @@ const SignConfig = {
             enabled: true
           },
           {
-            name: '浦发公众号',
+            name: '浦发公众号-每日打卡',
             script: 'PuFaWechat.js',
             enabled: true
           }
