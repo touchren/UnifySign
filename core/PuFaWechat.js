@@ -58,17 +58,17 @@ function SignRunner() {
     if (mine) {
       FloatyInstance.setFloatyInfo(mine, "打开[浦发公众号]");
       click("信用卡公众号");
-      sleep(3000);
+      sleep(2000);
       click("浦发银行信用卡");
 
       let menu = widgetUtils.widgetGetOne("小浦🎁福利");
       FloatyInstance.setFloatyInfo(menu, "打开[小浦🎁福利]菜单");
-      sleep(3000);
+      sleep(2000);
       // 点击菜单
       click("小浦🎁福利");
 
       //FloatyInstance.setFloatyText("打开[超6红包·全能积分]菜单");
-      sleep(3000);
+      sleep(1000);
       // 点击二级菜单
       click("超6红包·全能积分");
 
@@ -81,13 +81,13 @@ function SignRunner() {
       click("rBsZJWHOqAOAMdCIAABWGkErleI501"); //超6红包图片
       sleep(5000);
       // 进入 超6红包 页面
-      log(
-        textMatches(/您目前还有.+/)
-          .findOnce()
-          .parent()
-          .parent()
-          .child(0)
-      ); // 394,1204,710,1655 , 开红包
+      // log(
+      //   textMatches(/您目前还有.+/)
+      //     .findOnce()
+      //     .parent()
+      //     .parent()
+      //     .child(0)
+      // ); // 394,1204,710,1655 , 开红包
 
       // 点击开红包
       textMatches(/您目前还有.+/)
@@ -102,20 +102,20 @@ function SignRunner() {
         FloatyInstance.setFloatyInfo(openOne, "点击[开1个红包]");
         // 点击 开1个红包
         click("开1个红包");
+        sleep(3000);
       }
 
       //FloatyInstance.setFloatyText("关闭[打成红包成功的页面]");
-      sleep(5000);
+      
       // 关闭弹框
       // 494,1525,585,1614 , 关闭
-      textMatches(/.*恭喜您.*/)
-        .findOnce()
-        .parent()
-        .parent()
-        .child(1)
-        .click();
-      //FloatyInstance.setFloatyText("进入[每日打卡]页面查看");
-      sleep(5000);
+      let success = textMatches(/.*恭喜您.*/).findOne(5000);
+      if (success) {
+        this.setExecuted();
+        success.parent().parent().child(1).click();        
+        //FloatyInstance.setFloatyText("进入[每日打卡]页面查看");
+        sleep(2000);
+      }
       // 进入 每日打卡 页面查看
       className("android.widget.Image")
         .depth(23)
@@ -124,7 +124,7 @@ function SignRunner() {
         .findOnce()
         .click();
       FloatyInstance.setFloatyText("[浦发公众号-每日打卡]签到完成");
-      sleep(10 * 1000);
+      sleep(1000);
     } else {
       warn("没有找到[信用卡公众号文件夹], 退出签到");
       return false;
