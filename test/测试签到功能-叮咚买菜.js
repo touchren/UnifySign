@@ -3,6 +3,7 @@ let singletonRequire = require("../lib/SingletonRequirer.js")(runtime, this);
 let WidgetUtils = singletonRequire("WidgetUtils");
 let commonFunctions = singletonRequire("CommonFunction");
 let FloatyInstance = singletonRequire("FloatyUtil");
+let { logInfo, errorInfo, warnInfo, debugInfo, infoLog, debugForDev, flushAllLogs } = singletonRequire('LogUtils')
 FloatyInstance.setFloatyInfo(
   { x: config.device_width * 0.4, y: config.device_height / 2 },
   "准备执行 签到功能测试"

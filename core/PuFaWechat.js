@@ -126,6 +126,8 @@ function SignRunner() {
         .clickable()
         .findOnce()
         .click();
+      sleep(3000);
+      click("待领取");
       FloatyInstance.setFloatyText("[浦发公众号-每日打卡]签到完成");
       sleep(1000);
     } else {

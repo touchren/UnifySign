@@ -8,6 +8,7 @@ let FloatyInstance = singletonRequire('FloatyUtil')
 let widgetUtils = singletonRequire('WidgetUtils')
 let automator = singletonRequire('Automator')
 let commonFunctions = singletonRequire('CommonFunction')
+let { logInfo, errorInfo, warnInfo, debugInfo, infoLog, debugForDev, flushAllLogs } = singletonRequire('LogUtils')
 
 let BaseSignRunner = require('./BaseSignRunner.js')
 function SignRunner () {
