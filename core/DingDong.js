@@ -2,231 +2,388 @@
  * 叮咚签到
  */
 
-let { config } = require('../config.js')(runtime, global)
-let singletonRequire = require('../lib/SingletonRequirer.js')(runtime, global)
-let FloatyInstance = singletonRequire('FloatyUtil')
-let widgetUtils = singletonRequire('WidgetUtils')
-let automator = singletonRequire('Automator')
-let commonFunctions = singletonRequire('CommonFunction')
-let { logInfo, errorInfo, warnInfo, debugInfo, infoLog, debugForDev, flushAllLogs } = singletonRequire('LogUtils')
+let { config } = require("../config.js")(runtime, global);
+let { clickScale, randomSwipe } = require("../lib/Utils.js");
+let singletonRequire = require("../lib/SingletonRequirer.js")(runtime, global);
+let FloatyInstance = singletonRequire("FloatyUtil");
+let widgetUtils = singletonRequire("WidgetUtils");
+let automator = singletonRequire("Automator");
+let commonFunctions = singletonRequire("CommonFunction");
+let {
+  logInfo,
+  errorInfo,
+  warnInfo,
+  debugInfo,
+  infoLog,
+  debugForDev,
+  flushAllLogs,
+} = singletonRequire("LogUtils");
 
-let BaseSignRunner = require('./BaseSignRunner.js')
-function SignRunner () {
-  BaseSignRunner.call(this)
+let BaseSignRunner = require("./BaseSignRunner.js");
+function SignRunner() {
+  BaseSignRunner.call(this);
   this.subTasks = config.dingdong_config.subTasks || {
-    CREDIT_SIGN: '积分签到',
-    FISHPOND: '鱼塘签到',
-    ORCHARD: '叮咚果园'
-  }
-  let _package_name = 'com.yaya.zone'
-  let mine_base64 = config.dingdong_config.mine_base64
-  let fishpond_entry = config.dingdong_config.fishpond_entry
-  let fishpond_check = config.dingdong_config.fishpond_check
-  let can_collect = config.dingdong_config.fishpond_can_collect
-  let fishpond_daily_collect = config.dingdong_config.fishpond_daily_collect
-  let fishpond_normal_collect = config.dingdong_config.fishpond_normal_collect
-  let fishpond_close = config.dingdong_config.fishpond_close
+    CREDIT_SIGN: "积分签到",
+    FISHPOND: "鱼塘签到",
+    ORCHARD: "叮咚果园",
+  };
+  let _package_name = "com.yaya.zone";
+  let mine_base64 = config.dingdong_config.mine_base64; // 我的
+  let fishpond_entry = config.dingdong_config.fishpond_entry; // 叮咚鱼塘
+  let fishpond_check = config.dingdong_config.fishpond_check; // 攻略
+  let can_collect = config.dingdong_config.fishpond_can_collect; // 可领取
+  let fishpond_daily_collect = config.dingdong_config.fishpond_daily_collect; //
+  let fishpond_normal_collect = config.dingdong_config.fishpond_normal_collect;
+  let fishpond_go_browser = config.dingdong_config.fishpond_go_browser; // 去逛逛
+  let fishpond_take_task = config.dingdong_config.fishpond_take_task; // 领取任务
+  let fishpond_close = config.dingdong_config.fishpond_close; // X
 
   // 连续签到
-  let continuous_sign = config.dingdong_config.fishpond_continuous_sign
-  let do_continuous_sign = config.dingdong_config.fishpond_do_continuous_sign
-  let close_continuous_sign = config.dingdong_config.fishpond_close_continuous_sign
-  this.restartLimit = 3
+  let continuous_sign = config.dingdong_config.fishpond_continuous_sign;
+  let do_continuous_sign = config.dingdong_config.fishpond_do_continuous_sign;
+  let close_continuous_sign =
+    config.dingdong_config.fishpond_close_continuous_sign;
+  this.restartLimit = 3;
   this.exec = function () {
-    launch(_package_name)
-    sleep(1000)
-    FloatyInstance.enableLog()
-    this.awaitAndSkip(['\\s*允许\\s*', '\\s*跳过\\s*', '\\s*下次再说\\s*', '\\s*取消\\s*'])
-    FloatyInstance.setFloatyText('准备查找 是否存在弹窗广告')
-    let closeButton = widgetUtils.widgetGetById('com.yaya.zone:id/iv_(close|cancel)', 4000)
+    launch(_package_name);
+    sleep(1000);
+    FloatyInstance.enableLog();
+    this.awaitAndSkip([
+      "\\s*允许\\s*",
+      "\\s*跳过\\s*",
+      "\\s*下次再说\\s*",
+      "\\s*取消\\s*",
+    ]);
+    FloatyInstance.setFloatyText("准备查找 是否存在弹窗广告");
+    let closeButton = widgetUtils.widgetGetById(
+      "com.yaya.zone:id/iv_(close|cancel)",
+      4000
+    );
     while (!!closeButton) {
-      FloatyInstance.setFloatyInfo({
-        x: closeButton.bounds().centerX(),
-        y: closeButton.bounds().centerY()
-      }, '找到了关闭按钮')
-      sleep(500)
-      FloatyInstance.setFloatyText('点击关闭')
-      automator.clickCenter(closeButton)
-      sleep(500)
-      closeButton = widgetUtils.widgetGetById('com.yaya.zone:id/iv_(close|cancel)', 1000)
+      FloatyInstance.setFloatyInfo(
+        {
+          x: closeButton.bounds().centerX(),
+          y: closeButton.bounds().centerY(),
+        },
+        "找到了关闭按钮"
+      );
+      sleep(500);
+      FloatyInstance.setFloatyText("点击关闭");
+      automator.clickCenter(closeButton);
+      sleep(500);
+      closeButton = widgetUtils.widgetGetById(
+        "com.yaya.zone:id/iv_(close|cancel)",
+        1000
+      );
     }
-    FloatyInstance.setFloatyText('准备查找 我的')
-    let mine = widgetUtils.widgetGetById('com.yaya.zone:id/ani_mine')
+    FloatyInstance.setFloatyText("准备查找 我的");
+    //let mine = widgetUtils.widgetGetById("com.yaya.zone:id/ani_mine");
+    let mine = widgetUtils.widgetGetOne("我的");
     if (!mine) {
-      FloatyInstance.setFloatyText('未找到 我的 准备用图片方式查找')
-      sleep(1000)
+      FloatyInstance.setFloatyText("未找到 我的 准备用图片方式查找");
+      sleep(1000);
       // id 找不到 用图片查找
-      mine = this.wrapImgPointWithBounds(this.captureAndCheckByImg(mine_base64, '我的'))
+      mine = this.wrapImgPointWithBounds(
+        this.captureAndCheckByImg(mine_base64, "我的")
+      );
     }
     if (mine) {
-      FloatyInstance.setFloatyInfo({
-        x: mine.bounds().centerX(),
-        y: mine.bounds().centerY()
-      }, '找到了 我的 按钮')
-      sleep(600)
-      automator.click(mine.bounds().centerX(), mine.bounds().centerY())
-      sleep(1000)
+      FloatyInstance.setFloatyInfo(
+        {
+          x: mine.bounds().centerX(),
+          y: mine.bounds().centerY(),
+        },
+        "找到了 我的 按钮"
+      );
+      sleep(600);
+      automator.click(mine.bounds().centerX(), mine.bounds().centerY());
+      sleep(1000);
       // 领积分
-      this.points()
-      // 鱼塘
-      this.fishpond()
+      this.points();
       // 果园
-      this.orchard()
-      if (this.isSubTaskExecuted(this.subTasks.CREDIT_SIGN, true)
-        && this.isSubTaskExecuted(this.subTasks.FISHPOND, true)
-        && this.isSubTaskExecuted(this.subTasks.ORCHARD, true)) {
-        infoLog(['全部任务完成'])
-        this.setExecuted()
-      } else {
-        warnInfo(['有部分任务未完成'])
-      }
+      this.orchard();
+      // 鱼塘
+      this.fishpond();
 
+      if (
+        this.isSubTaskExecuted(this.subTasks.CREDIT_SIGN, true) &&
+        this.isSubTaskExecuted(this.subTasks.FISHPOND, true) &&
+        this.isSubTaskExecuted(this.subTasks.ORCHARD, true)
+      ) {
+        infoLog(["全部任务完成"]);
+        this.setExecuted();
+      } else {
+        warnInfo(["有部分任务未完成"]);
+      }
     } else {
-      FloatyInstance.setFloatyText('未找到 我的')
+      FloatyInstance.setFloatyText("未找到 我的");
       if (this.restartLimit-- >= 0) {
-        FloatyInstance.setFloatyText('未找到 我的 准备重开应用')
-        commonFunctions.killCurrentApp()
-        sleep(2000)
-        this.exec()
+        FloatyInstance.setFloatyText("未找到 我的 准备重开应用");
+        commonFunctions.killCurrentApp();
+        sleep(2000);
+        this.exec();
       }
     }
-    sleep(3000)
-    !config._debugging && commonFunctions.minimize(_package_name)
-  }
+    sleep(3000);
+    !config._debugging && commonFunctions.minimize(_package_name);
+  };
 
   this.checkIfContinuousOpen = function () {
-    this.captureAndCheckByImg(do_continuous_sign, '立即签到', null, true)
-    sleep(2000)
-    let closed = this.captureAndCheckByImg(close_continuous_sign, '关闭连续签到', null, true)
-    sleep(2000)
-    return closed
-  }
+    this.captureAndCheckByImg(do_continuous_sign, "签到", 500, true); // 待确认
+    sleep(2000);
+    let closed = this.captureAndCheckByImg(
+      close_continuous_sign,
+      "关闭连续签到",
+      null,
+      true
+    );
+    sleep(2000);
+    return closed;
+  };
+
+  this.go_browser = function () {
+    let browser = this.captureAndCheckByImg(
+      fishpond_go_browser,
+      "去逛逛",
+      null,
+      true
+    );
+    if (browser) {
+      sleep(35 * 1000);
+      back();
+      sleep(2000);
+    }
+    return browser;
+  };
 
   this.fishpond = function () {
     if (this.isSubTaskExecuted(this.subTasks.FISHPOND)) {
-      return
+      return;
     }
-    let fishpond = this.captureAndCheckByImg(fishpond_entry, '叮咚鱼塘')
+    let fishpond = this.captureAndCheckByImg(fishpond_entry, "叮咚鱼塘");
     if (fishpond) {
-      automator.click(fishpond.centerX(), fishpond.centerY())
-      sleep(2000)
-      let continuousSigned = false
-      if (!this.checkForTargetImg(fishpond_check, '鱼塘加载校验')) {
+      automator.click(fishpond.centerX(), fishpond.centerY());
+      sleep(2000);
+      let continuousSigned = false;
+      if (!this.checkForTargetImg(fishpond_check, "鱼塘加载校验")) {
         // 尝试校验是否自动展示了连续签到
         if (!this.checkIfContinuousOpen()) {
-          FloatyInstance.setFloatyText('未能正确打开鱼塘 准备重开应用')
-          commonFunctions.killCurrentApp()
-          sleep(2000)
-          return this.exec()
+          FloatyInstance.setFloatyText("未能正确打开鱼塘 准备重开应用");
+          commonFunctions.killCurrentApp();
+          sleep(2000);
+          return this.exec();
         } else {
-          continuousSigned = true
+          continuousSigned = true;
         }
       }
       if (!continuousSigned) {
-        let continuousSign = this.captureAndCheckByImg(continuous_sign, '连续签到')
+        let continuousSign = this.captureAndCheckByImg(
+          continuous_sign,
+          "连续签到"
+        );
         if (continuousSign) {
-          automator.click(continuousSign.centerX(), continuousSign.centerY())
-          sleep(2000)
-          this.checkIfContinuousOpen()
-          sleep(2000)
+          automator.click(continuousSign.centerX(), continuousSign.centerY());
+          sleep(2000);
+          this.checkIfContinuousOpen();
+          sleep(2000);
         }
       }
-      let collect = this.captureAndCheckByImg(can_collect, '可领取')
-      if (collect) {
-        automator.click(collect.centerX(), collect.centerY())
-        sleep(1000)
-        let sign = this.captureAndCheckByImg(fishpond_daily_collect, '每日签到')
-        if (sign) {
-          automator.click(sign.centerX(), sign.centerY())
-          sleep(1000)
-        }
-        let sign2 = this.captureAndCheckByImg(fishpond_normal_collect, '奖励领取')
-        while (sign2) {
-          automator.click(sign2.centerX(), sign2.centerY())
-          sleep(2000)
-          this.checkForTargetImg(fishpond_check, '鱼塘加载校验')
-          sign2 = this.captureAndCheckByImg(fishpond_normal_collect, '奖励领取')
-        }
-      }
-      closeButton = this.captureAndCheckByImg(fishpond_close, '关闭按钮')
-      if (closeButton) {
-        automator.click(closeButton.centerX(), closeButton.centerY())
+      let collect = this.captureAndCheckByImg(can_collect, "可领取");
+      if (!collect) {
+        log("使用坐标直接点击[可领取]");
+        click(100, 1900);
+        sleep(1000);
       } else {
-        automator.back()
+        automator.click(collect.centerX(), collect.centerY());
+        sleep(1000);
       }
-      sleep(1000)
-      this.setSubTaskExecuted(this.subTasks.FISHPOND)
-    } else {
-      FloatyInstance.setFloatyText('未找到鱼塘入口')
-      sleep(1000)
-    }
-  }
+      log("开始[领饲料]");
+      // 领饲料
+      let sign = this.captureAndCheckByImg(fishpond_daily_collect, "每日签到");
+      if (sign) {
+        automator.click(sign.centerX(), sign.centerY());
+        sleep(1000);
+      }
 
+      // 完成去逛一逛任务
+      // while (this.go_browser()) {
+      //   log("继续尝试是否还有逛一逛任务");
+      // }
+      swipe(450, 1700, 450, 1000, 235);
+      sleep(2000);
+      while (
+        !!this.captureAndCheckByImg(fishpond_take_task, "领取任务", null, true)
+      ) {
+        sleep(2000);
+      }
+      while (this.go_browser()) {
+        log("继续尝试是否还有逛一逛任务");
+      }
+
+      swipe(450, 1000, 450, 1700, 235);
+      sleep(2000);
+      while (
+        !!this.captureAndCheckByImg(fishpond_take_task, "领取任务", null, true)
+      ) {
+        sleep(2000);
+      }
+      let sign2 = this.captureAndCheckByImg(
+        fishpond_normal_collect,
+        "奖励领取"
+      );
+      while (sign2) {
+        automator.click(sign2.centerX(), sign2.centerY());
+        sleep(2000);
+        this.checkForTargetImg(fishpond_check, "鱼塘加载校验");
+        sign2 = this.captureAndCheckByImg(fishpond_normal_collect, "奖励领取");
+      }
+
+      log("结束[领饲料]");
+      FloatyInstance.setFloatyInfo(
+        {
+          x: 900,
+          y: 1800,
+        },
+        "喂饲料"
+      );
+      clickScale(950, 1900, "喂饲料");
+      sleep(2000);
+
+      // 领饲料结束
+      closeButton = this.captureAndCheckByImg(fishpond_close, "关闭按钮");
+      if (closeButton) {
+        automator.click(closeButton.centerX(), closeButton.centerY());
+      } else {
+        automator.back();
+      }
+      sleep(1000);
+      this.setSubTaskExecuted(this.subTasks.FISHPOND);
+    } else {
+      FloatyInstance.setFloatyText("未找到鱼塘入口");
+      sleep(1000);
+    }
+  };
+
+  // 22/06/17 确认功能正常
   this.points = function () {
     if (this.isSubTaskExecuted(this.subTasks.CREDIT_SIGN)) {
-      return
+      return;
     }
-    let pointEntry = widgetUtils.widgetGetOne('积分')
+    let pointEntry = widgetUtils.widgetGetOne("积分");
     if (pointEntry) {
-      this.displayButtonAndClick(pointEntry, '领积分', 1000)
-      if (widgetUtils.widgetCheck('积分规则')) {
-        FloatyInstance.setFloatyText('进入积分界面成功')
-        sleep(1000)
-        let findType = widgetUtils.alternativeWidget('立即签到领积分', '今日已签到.*')
+      this.displayButtonAndClick(pointEntry, "领积分", 1000);
+      if (widgetUtils.widgetCheck("积分规则")) {
+        FloatyInstance.setFloatyText("进入积分界面成功");
+        sleep(1000);
+        let findType = widgetUtils.alternativeWidget(
+          "立即签到领积分",
+          "今日已签到.*"
+        );
         if (findType === 1) {
-          this.displayButtonAndClick(widgetUtils.widgetGetOne('立即签到领积分', 1000), '签到领积分')
-          this.setSubTaskExecuted(this.subTasks.CREDIT_SIGN)
+          this.displayButtonAndClick(
+            widgetUtils.widgetGetOne("立即签到领积分", 1000),
+            "签到领积分"
+          );
+          this.setSubTaskExecuted(this.subTasks.CREDIT_SIGN);
         } else {
           if (findType === 2) {
-            FloatyInstance.setFloatyText('今日已签到')
-            this.setSubTaskExecuted(this.subTasks.CREDIT_SIGN)
+            FloatyInstance.setFloatyText("今日已签到");
+            this.setSubTaskExecuted(this.subTasks.CREDIT_SIGN);
           } else {
-            FloatyInstance.setFloatyText('未能找到领积分按钮')
+            FloatyInstance.setFloatyText("未能找到领积分按钮");
           }
-          sleep(1000)
+          sleep(1000);
         }
-        sleep(500)
-        automator.back()
-        sleep(1000)
+        sleep(500);
+        automator.back();
+        sleep(1000);
       }
     }
-  }
+  };
 
-  let orchardEntry = config.dingdong_config.orchard_entry
-  let orchardCanCollect = config.dingdong_config.orchard_can_collect
-  let orchardCollect = config.dingdong_config.orchard_daily_collect
-  let orchardCollect2 = config.dingdong_config.orchard_normal_collect
-  let orchardEnterCheck = config.dingdong_config.orchard_check
+  let orchardEntry = config.dingdong_config.orchard_entry; // 叮咚果园
+  let orchardCanCollect = config.dingdong_config.orchard_can_collect; // 可领取
+  let orchardDailyCollect = config.dingdong_config.orchard_daily_collect; // 领取 config.dingdong_config.orchard_daily_collect
+  let orchardCollect = config.dingdong_config.fishpond_daily_collect; // 可领取 config.dingdong_config.orchard_normal_collect
+  let orchardEnterCheck = config.dingdong_config.orchard_check; // 领水滴
 
   this.orchard = function () {
     if (this.isSubTaskExecuted(this.subTasks.ORCHARD)) {
-      return
+      return;
     }
-    let orchard = this.captureAndCheckByImg(orchardEntry, '叮咚果园')
+    let orchard = this.captureAndCheckByImg(orchardEntry, "叮咚果园");
     if (orchard) {
-      automator.click(orchard.centerX(), orchard.centerY())
-      sleep(2000)
-      if (!this.checkForTargetImg(orchardEnterCheck, '果园加载校验')) {
-        FloatyInstance.setFloatyText('未能正确打开果园')
-        automator.back()
-        sleep(2000)
-        return this.orchard()
+      automator.click(orchard.centerX(), orchard.centerY());
+      sleep(2000);
+      if (!this.checkForTargetImg(orchardEnterCheck, "果园加载校验")) {
+        FloatyInstance.setFloatyText("未能正确打开果园");
+        automator.back();
+        sleep(2000);
+        return this.orchard();
       }
-      let canCollect = this.captureAndCheckByImg(orchardCanCollect, '可领取')
-      if (canCollect && this.captureAndCheckByImg(orchardEnterCheck, '领水滴', null, true)) {
-        this.captureAndCheckByImg(orchardCollect, '每日签到', null, true)
-        sleep(2000)
-        while (!!this.captureAndCheckByImg(orchardCollect2, '任务签到', null, true)) {
-          sleep(2000)
+      let canCollect = this.captureAndCheckByImg(orchardCanCollect, "可领取");
+      if (
+        canCollect &&
+        this.captureAndCheckByImg(orchardEnterCheck, "领水滴", null, true)
+      ) {
+        sleep(1000);
+        this.captureAndCheckByImg(orchardDailyCollect, "每日签到", null, true);
+        sleep(2000);
+        while (
+          !!this.captureAndCheckByImg(orchardCollect, "任务签到", null, true)
+        ) {
+          sleep(2000);
         }
+        while (
+          !!this.captureAndCheckByImg(
+            fishpond_take_task,
+            "领取任务",
+            null,
+            true
+          )
+        ) {
+          sleep(2000);
+        }
+        swipe(450, 1800, 450, 1300, 235);
+        sleep(2000);
+        while (
+          !!this.captureAndCheckByImg(
+            fishpond_take_task,
+            "领取任务",
+            null,
+            true
+          )
+        ) {
+          sleep(2000);
+        }
+        while (this.go_browser()) {
+          log("继续尝试是否还有逛一逛任务");
+        }
+        while (
+          !!this.captureAndCheckByImg(orchardCollect, "任务签到", null, true)
+        ) {
+          sleep(2000);
+        }
+        swipe(450, 1300, 450, 1800, 235);
+        sleep(2000);
+        while (
+          !!this.captureAndCheckByImg(
+            orchardDailyCollect,
+            "任务签到",
+            null,
+            true
+          )
+        ) {
+          sleep(2000);
+        }
+        this.setSubTaskExecuted(this.subTasks.ORCHARD);
       }
-      this.setSubTaskExecuted(this.subTasks.ORCHARD)
-      automator.back()
-    }
-  }
 
+      automator.back();
+    }
+  };
 }
 
-SignRunner.prototype = Object.create(BaseSignRunner.prototype)
-SignRunner.prototype.constructor = SignRunner
-module.exports = new SignRunner()
+SignRunner.prototype = Object.create(BaseSignRunner.prototype);
+SignRunner.prototype.constructor = SignRunner;
+module.exports = new SignRunner();

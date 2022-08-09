@@ -7,6 +7,7 @@ let FloatyInstance = singletonRequire("FloatyUtil");
 let widgetUtils = singletonRequire("WidgetUtils");
 let automator = singletonRequire("Automator");
 let commonFunctions = singletonRequire("CommonFunction");
+let { clickScale } = require("../lib/Utils.js");
 
 let BaseSignRunner = require("./BaseSignRunner.js");
 
@@ -119,6 +120,38 @@ function SignRunner() {
         //FloatyInstance.setFloatyText("进入[每日打卡]页面查看");
         sleep(2000);
       }
+
+      // 领取[每日任务]
+      className("android.widget.Image")
+        .depth(23)
+        .indexInParent(1)
+        .clickable()
+        .findOnce()
+        .click();
+      sleep(3000);
+      clickScale(540, 1500, "领取任务");
+      sleep(2000);
+      click("confirm");
+      sleep(1000);
+      back();
+      sleep(2000);
+
+      // 超6日 (其实只需要6,16,26点, 不过多点也无所谓);
+      FloatyInstance.setFloatyInfo(
+        {
+          x: 960,
+          y: 530,
+        },
+        "超6日"
+      );
+      sleep(1000);
+      clickScale(960, 580, "超6日");
+      sleep(2000);
+      clickScale(540, 1821, "立即领取");
+      sleep(2000);
+      back();
+      sleep(2000);
+
       // 进入 每日打卡 页面查看
       className("android.widget.Image")
         .depth(23)
@@ -129,7 +162,7 @@ function SignRunner() {
       sleep(3000);
       click("待领取");
       FloatyInstance.setFloatyText("[浦发公众号-每日打卡]签到完成");
-      sleep(1000);
+      sleep(2000);
     } else {
       warn("没有找到[信用卡公众号文件夹], 退出签到");
       return false;

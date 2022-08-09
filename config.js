@@ -185,21 +185,24 @@ let workpath = getCurrentWorkPath()
 let configDataPath = workpath + '/config_data/'
 // 叮咚识图配置
 let default_dingdong_config = {
-  mine_base64: files.read(configDataPath + 'dingdong/mine_base64.data'),
-  fishpond_entry: files.read(configDataPath + 'dingdong/fishpond_entry.data'),
-  fishpond_check: files.read(configDataPath + 'dingdong/fishpond_check.data'),
-  fishpond_can_collect: files.read(configDataPath + 'dingdong/fishpond_can_collect.data'),
-  fishpond_daily_collect: files.read(configDataPath + 'dingdong/fishpond_daily_collect.data'),
-  fishpond_normal_collect: files.read(configDataPath + 'dingdong/fishpond_normal_collect.data'),
-  fishpond_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_continuous_sign.data'),
-  fishpond_do_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_do_continuous_sign.data'),
-  fishpond_close_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_close_continuous_sign.data'),
-  fishpond_close: files.read(configDataPath + 'dingdong/fishpond_close.data'),
-  orchard_entry: files.read(configDataPath + 'dingdong/orchard_entry.data'),
-  orchard_can_collect: files.read(configDataPath + 'dingdong/orchard_can_collect.data'),
-  orchard_daily_collect: files.read(configDataPath + 'dingdong/orchard_daily_collect.data'),
-  orchard_normal_collect: files.read(configDataPath + 'dingdong/orchard_normal_collect.data'),
-  orchard_check: files.read(configDataPath + 'dingdong/orchard_check.data'),
+  mine_base64: files.read(configDataPath + 'dingdong/mine_base64.data'), // 我的 (备用, 不需要用到)
+  fishpond_entry: files.read(configDataPath + 'dingdong/fishpond_entry.data'), // 叮咚鱼塘 (确认生效)
+  fishpond_check: files.read(configDataPath + 'dingdong/fishpond_check.data'), // 攻略 (无效, 可能已改版)
+  fishpond_can_collect: files.read(configDataPath + 'dingdong/fishpond_can_collect.data'), //可领取
+  fishpond_daily_collect: files.read(configDataPath + 'dingdong/fishpond_daily_collect.data'), // 领取
+  fishpond_normal_collect: files.read(configDataPath + 'dingdong/fishpond_normal_collect.data'), // 可领取  
+  fishpond_go_browser: files.read(configDataPath + 'dingdong/fishpond_go_browser.data'), // 去逛逛
+  fishpond_take_task: files.read(configDataPath + 'dingdong/fishpond_take_task.data'), // 领取任务
+  fishpond_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_continuous_sign.data'), // 连续签到
+  fishpond_do_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_do_continuous_sign.data'), //点击签到
+  fishpond_close_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_close_continuous_sign.data'), // X
+  fishpond_close: files.read(configDataPath + 'dingdong/fishpond_close.data'), // <-
+  orchard_entry: files.read(configDataPath + 'dingdong/orchard_entry.data'), // 叮咚果园
+  orchard_can_collect: files.read(configDataPath + 'dingdong/orchard_can_collect.data'), // 可领取
+  orchard_daily_collect: files.read(configDataPath + 'dingdong/orchard_daily_collect.data'), // 领取
+  orchard_normal_collect: files.read(configDataPath + 'dingdong/orchard_normal_collect.data'), // 可领取
+  orchard_check: files.read(configDataPath + 'dingdong/orchard_check.data'), // 领水滴
+  
   subTasks: {
     CREDIT_SIGN: '积分签到',
     FISHPOND: '鱼塘签到',
