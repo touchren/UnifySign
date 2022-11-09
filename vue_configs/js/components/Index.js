@@ -12,16 +12,16 @@ let Index = {
           link: '/basic/sign'
         },
         {
-          title: '悬浮窗设置',
-          link: '/basic/floaty'
-        },
-        {
           title: '日志设置',
           link: '/basic/log'
         },
         {
           title: '前台应用白名单设置',
           link: '/advance/skipPackage'
+        },
+        {
+          title: 'OCR设置',
+          link: '/advance/ocr'
         },
         {
           title: '高级设置',

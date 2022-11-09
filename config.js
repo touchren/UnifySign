@@ -2,12 +2,15 @@
  * @Author: TonyJiangWJ
  * @Date: 2019-12-09 20:42:08
  * @Last Modified by: TonyJiangWJ
- * @Last Modified time: 2020-12-26 11:56:26
+ * @Last Modified time: 2022-10-02 14:09:48
  * @Description: 
  */
 let currentEngine = engines.myEngine().getSource() + ''
 let isRunningMode = currentEngine.endsWith('/config.js') && typeof module === 'undefined'
 let is_pro = !!Object.prototype.toString.call(com.stardust.autojs.core.timing.TimedTask.Companion).match(/Java(Class|Object)/)
+let extendSignConfig = require('./signConfig.js')
+let custom_config = files.exists('./extends/CustomConfig.js') ? require('./extends/CustomConfig.js') : { supported_signs: [] }
+custom_config = custom_config || { supported_signs: [] }
 let default_config = {
   password: '',
   timeout_unlock: 1000,
@@ -73,39 +76,67 @@ let default_config = {
   thread_name_prefix: 'unify_sign_',
   // 标记是否清除webview缓存
   clear_webview_cache: false,
+  // 打印webview日志
+  webview_loging: false,
+  // 本地ocr优先级
+  local_ocr_priority: 'auto',
   supported_signs: [
     {
       name: '蚂蚁积分签到',
+      taskCode: 'AntCredits',
       script: 'AntCredits.js',
       enabled: true
     },
     {
       name: '全家签到',
+      taskCode: 'Fami',
       script: 'Fami.js',
       enabled: true
     },
     {
       name: '京东签到',
+      taskCode: 'JingDong',
       script: 'JingDongBeans.js',
       enabled: true
     },
     {
       name: '米游社-原神签到',
+      taskCode: 'MiHoYo',
       script: 'MiHoYou.js',
       enabled: true
     },
     {
       name: '淘金币签到',
+      taskCode: 'Taobao',
       script: 'Taobao-Coin.js',
       enabled: true
     },
     {
       name: '叮咚签到',
+      taskCode: 'DingDong',
       script: 'DingDong.js',
-      enabled: true
+      enabled: true,
+      subTasks: [
+        {
+          taskCode: 'creditSign',
+          taskName: '积分签到',
+          enabled: true,
+        },
+        {
+          taskCode: 'fishpond',
+          taskName: '鱼塘签到',
+          enabled: true,
+        },
+        {
+          taskCode: 'orchard',
+          taskName: '叮咚果园',
+          enabled: true,
+        }
+      ]
     },
     {
       name: '微博积分签到',
+      taskCode: 'Weibo',
       script: 'Weibo.js',
       enabled: true
     },
@@ -113,8 +144,20 @@ let default_config = {
       name: '浦发公众号-每日打卡',
       script: 'PuFaWechat.js',
       enabled: true
-    }
-  ]
+    },
+    {
+      name: '芭芭农场',
+      taskCode: 'BBFarm',
+      script: 'BBFarm.js',
+      enabled: true
+    },
+    {
+      name: '淘宝现金签到',
+      taskCode: 'TaobaoSign',
+      script: 'Taobao-Sign.js',
+      enabled: true
+    },
+  ].concat(custom_config.supported_signs || [])
 }
 // 不同项目需要设置不同的storageName，不然会导致配置信息混乱
 let CONFIG_STORAGE_NAME = 'unify_sign'
@@ -124,6 +167,7 @@ let storageConfig = storages.create(CONFIG_STORAGE_NAME)
 let securityFields = ['password', 'alipay_lock_password']
 let AesUtil = require('./lib/AesUtil.js')
 let aesKey = device.getAndroidId()
+
 Object.keys(default_config).forEach(key => {
   let storedVal = storageConfig.get(key)
   if (typeof storedVal !== 'undefined') {
@@ -131,7 +175,7 @@ Object.keys(default_config).forEach(key => {
       let stored = JSON.parse(JSON.stringify(storageConfig.get(key)))
       config[key] = default_config[key]
       config[key].forEach(sign => {
-        let match = stored.filter(s => s.name === sign.name)
+        let match = stored.filter(s => s.taskCode === sign.taskCode)
         if (match && match.length > 0) {
           sign.enabled = match[0].enabled
         }
@@ -181,36 +225,37 @@ config.overwrite = (key, value) => {
   storages.create(storage_name).put(key, value)
 }
 // 扩展配置
-let workpath = getCurrentWorkPath()
-let configDataPath = workpath + '/config_data/'
-// 叮咚识图配置
-let default_dingdong_config = {
-  mine_base64: files.read(configDataPath + 'dingdong/mine_base64.data'), // 我的 (备用, 不需要用到)
-  fishpond_entry: files.read(configDataPath + 'dingdong/fishpond_entry.data'), // 叮咚鱼塘 (确认生效)
-  fishpond_check: files.read(configDataPath + 'dingdong/fishpond_check.data'), // 攻略 (无效, 可能已改版)
-  fishpond_can_collect: files.read(configDataPath + 'dingdong/fishpond_can_collect.data'), //可领取
-  fishpond_daily_collect: files.read(configDataPath + 'dingdong/fishpond_daily_collect.data'), // 领取
-  fishpond_normal_collect: files.read(configDataPath + 'dingdong/fishpond_normal_collect.data'), // 可领取  
-  fishpond_go_browser: files.read(configDataPath + 'dingdong/fishpond_go_browser.data'), // 去逛逛
-  fishpond_take_task: files.read(configDataPath + 'dingdong/fishpond_take_task.data'), // 领取任务
-  fishpond_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_continuous_sign.data'), // 连续签到
-  fishpond_do_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_do_continuous_sign.data'), //点击签到
-  fishpond_close_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_close_continuous_sign.data'), // X
-  fishpond_close: files.read(configDataPath + 'dingdong/fishpond_close.data'), // <-
-  orchard_entry: files.read(configDataPath + 'dingdong/orchard_entry.data'), // 叮咚果园
-  orchard_can_collect: files.read(configDataPath + 'dingdong/orchard_can_collect.data'), // 可领取
-  orchard_daily_collect: files.read(configDataPath + 'dingdong/orchard_daily_collect.data'), // 领取
-  orchard_normal_collect: files.read(configDataPath + 'dingdong/orchard_normal_collect.data'), // 可领取
-  orchard_check: files.read(configDataPath + 'dingdong/orchard_check.data'), // 领水滴
+// let workpath = getCurrentWorkPath()
+// let configDataPath = workpath + '/config_data/'
+// // 叮咚识图配置
+// let default_dingdong_config = {
+//   mine_base64: files.read(configDataPath + 'dingdong/mine_base64.data'), // 我的 (备用, 不需要用到)
+//   fishpond_entry: files.read(configDataPath + 'dingdong/fishpond_entry.data'), // 叮咚鱼塘 (确认生效)
+//   fishpond_check: files.read(configDataPath + 'dingdong/fishpond_check.data'), // 攻略 (无效, 可能已改版)
+//   fishpond_can_collect: files.read(configDataPath + 'dingdong/fishpond_can_collect.data'), //可领取
+//   fishpond_daily_collect: files.read(configDataPath + 'dingdong/fishpond_daily_collect.data'), // 领取
+//   fishpond_normal_collect: files.read(configDataPath + 'dingdong/fishpond_normal_collect.data'), // 可领取  
+//   fishpond_go_browser: files.read(configDataPath + 'dingdong/fishpond_go_browser.data'), // 去逛逛
+//   fishpond_take_task: files.read(configDataPath + 'dingdong/fishpond_take_task.data'), // 领取任务
+//   fishpond_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_continuous_sign.data'), // 连续签到
+//   fishpond_do_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_do_continuous_sign.data'), //点击签到
+//   fishpond_close_continuous_sign: files.read(configDataPath + 'dingdong/fishpond_close_continuous_sign.data'), // X
+//   fishpond_close: files.read(configDataPath + 'dingdong/fishpond_close.data'), // <-
+//   orchard_entry: files.read(configDataPath + 'dingdong/orchard_entry.data'), // 叮咚果园
+//   orchard_can_collect: files.read(configDataPath + 'dingdong/orchard_can_collect.data'), // 可领取
+//   orchard_daily_collect: files.read(configDataPath + 'dingdong/orchard_daily_collect.data'), // 领取
+//   orchard_normal_collect: files.read(configDataPath + 'dingdong/orchard_normal_collect.data'), // 可领取
+//   orchard_check: files.read(configDataPath + 'dingdong/orchard_check.data'), // 领水滴
   
-  subTasks: {
-    CREDIT_SIGN: '积分签到',
-    FISHPOND: '鱼塘签到',
-    ORCHARD: '叮咚果园'
-  }
-}
-default_config.dingdong_config = default_dingdong_config
-config.dingdong_config = convertDefaultData(default_dingdong_config, CONFIG_STORAGE_NAME + '_dingdong')
+//   subTasks: {
+//     CREDIT_SIGN: '积分签到',
+//     FISHPOND: '鱼塘签到',
+//     ORCHARD: '叮咚果园'
+//   }
+// }
+// default_config.dingdong_config = default_dingdong_config
+// config.dingdong_config = convertDefaultData(default_dingdong_config, CONFIG_STORAGE_NAME + '_dingdong')
+extendSignConfig(default_config, config, CONFIG_STORAGE_NAME)
 
 if (!isRunningMode) {
   module.exports = function (__runtime__, scope) {
@@ -229,33 +274,4 @@ if (!isRunningMode) {
   setTimeout(function () {
     engines.execScriptFile(files.cwd() + "/可视化配置.js", { path: files.cwd() })
   }, 30)
-}
-
-function convertDefaultData(default_config, config_storage_name) {
-  let config_storage = storages.create(config_storage_name)
-  let configData = {}
-  Object.keys(default_config).forEach(key => {
-    let storageValue = config_storage.get(key, default_config[key])
-    if (storageValue == '') {
-      storageValue = default_config[key]
-    }
-    configData[key] = storageValue
-  })
-  return configData
-}
-
-function getCurrentWorkPath() {
-  let currentPath = files.cwd()
-  if (files.exists(currentPath + '/main.js')) {
-    return currentPath
-  }
-  let paths = currentPath.split('/')
-
-  do {
-    paths = paths.slice(0, paths.length - 1)
-    currentPath = paths.reduce((a, b) => a += '/' + b)
-  } while (!files.exists(currentPath + '/main.js') && paths.length > 0)
-  if (paths.length > 0) {
-    return currentPath
-  }
 }
